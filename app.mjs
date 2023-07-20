@@ -3,8 +3,14 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.0.0/firebas
 import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-analytics.js";
 import { getAuth, 
   createUserWithEmailAndPassword,
-  signInWithEmailAndPassword
+  signInWithEmailAndPassword,
 } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-auth.js";
+import { getDatabase, 
+  ref,
+  set,
+  onValue,
+  get,
+} from "https://www.gstatic.com/firebasejs/10.0.0/firebase-database.js";
 
 // TODO: Add SDKs for Firebase products that you want to use
 // https://firebase.google.com/docs/web/setup#available-libraries
@@ -24,8 +30,8 @@ const firebaseConfig = {
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const analytics = getAnalytics(app);
-
 const auth = getAuth();
+const db = getDatabase();
 
 let register_btn = document.getElementById("register_btn");
 
@@ -37,8 +43,12 @@ register_btn.addEventListener("click", function(){
   .then((userCredential) => {
     // Signed in 
     const user = userCredential.user;
+    set(ref(db,`users/${user.uid}`),{
+      email: email.value,
+      password: password.value,
+    });
 
-    console.log("user==>", user)
+   
     // ...
   })
   .catch((error) => {
@@ -61,7 +71,20 @@ login_btn.addEventListener("click", function(){
   .then((userCredential) => {
     // Signed in 
     const user = userCredential.user;
-    console.log('user=>', user)
+    onValue(ref(db,`users/${user.uid}`), (data) => {
+      console.log("data==>", data.val());
+    });
+
+    get(ref(db,`users/${user.uid}`))
+    .then((snapshot) => {
+      if (snapshot.exists()) {
+        console.log(snapshot.val());
+      } else {
+        console.log("No data available");
+      }
+    }).catch((error) => {
+      console.error(error);
+    });
     // ...
   })
   .catch((error) => {
